@@ -7,7 +7,8 @@ def read_excel_sheet(spreadsheet: str, sheet: str, header: int = 0):
     return sheet_dataframe
 
 
-def reshape_dataframe(dataframe: pd.DataFrame, rows: list = [], columns: list = []):
+def reshape_dataframe(dataframe: pd.DataFrame, rows: list = [], columns: list = [], drop_rows: list = [],
+                      drop_columns: list = []):
     if not rows and not columns:
         dataframe_adjusted = dataframe
     elif not columns:
@@ -17,10 +18,18 @@ def reshape_dataframe(dataframe: pd.DataFrame, rows: list = [], columns: list = 
     else:
         dataframe_adjusted = dataframe.iloc[rows[0]:rows[1], columns[0]:columns[1]]
 
+    if drop_rows:
+        dataframe_adjusted = dataframe_adjusted.drop(drop_rows)
+    if drop_columns:
+        dataframe_adjusted = dataframe_adjusted.drop(drop_columns, axis=1)
+
     return dataframe_adjusted
 
 
 if __name__ == "__main__":
     start_module_dataframe = read_excel_sheet(spreadsheet="erp/erp_3.1.xlsx", sheet="Copy of ST", header=2)
-    start_module_dataframe_adjusted = reshape_dataframe(start_module_dataframe, columns=[1, 12])
-    print(start_module_dataframe)
+    start_module_dataframe_reshaped = reshape_dataframe(start_module_dataframe, columns=[1, 12], drop_rows=[0],
+                                                        drop_columns=["Start Module Pre-Production Status",
+                                                                      "Assigned to Customer ID",
+                                                                      "Assigned to Order ID"])
+    print(start_module_dataframe_reshaped)
