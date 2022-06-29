@@ -1,0 +1,238 @@
+A UUID is designated with the binary number 01010000 if the entries for the following parameter(s) did not match: 
+	 - Drop App Code
+	 - Hardware Version
+
+
+                 UUID Drop App Code  Type Hardware Version Creation date SCC Ripples SCC mpyCross  Start Module
+0    846AMTWDAK9Q9AF8             0  A.C.                0    2021-12-02       1.1.0         1.16          True
+1    846AMTWDAK9Q9AF8        130034  A.C.             V2.3    2021-12-02       1.1.0         1.16          True
+2    KFEGNFEEY7YVVJF6             0  A.C.                0    2021-12-15       1.1.0         1.16          True
+3    KFEGNFEEY7YVVJF6        120015  A.C.             V2.3    2021-12-15       1.1.0         1.16          True
+4    F8LCRCDCZMM666JG             0  A.C.                0    2021-12-29       1.1.0         1.16          True
+5    F8LCRCDCZMM666JG        110012  A.C.             V2.3    2021-12-29       1.1.0         1.16          True
+6    L9BQ8BUBK9LCMNF4             0  A.C.                0    2021-12-29       1.1.0         1.16          True
+7    L9BQ8BUBK9LCMNF4        110024  A.C.             V2.3    2021-12-29       1.1.0         1.16          True
+8    6TKDJJDS8G9YCUQL             0  A.C.                0    2021-12-29       1.1.0         1.16          True
+9    6TKDJJDS8G9YCUQL        110033  A.C.             V2.3    2021-12-29       1.1.0         1.16          True
+10   GJRCN9MRGWWFPQWS             0  A.C.                0    2021-12-29       1.1.0         1.16          True
+11   GJRCN9MRGWWFPQWS        110010  A.C.             V2.3    2021-12-29       1.1.0         1.16          True
+12   9Z466W3MFFH9PH7M             0  A.C.                0    2021-12-15       1.1.0         1.16          True
+13   9Z466W3MFFH9PH7M        120065  A.C.             V2.3    2021-12-15       1.1.0         1.16          True
+14   G3XEBBN6LTFFAFUA             0  A.C.                0    2021-12-15       1.1.0         1.16          True
+15   G3XEBBN6LTFFAFUA        120007  A.C.             V2.3    2021-12-15       1.1.0         1.16          True
+16   EQFBTTJDC2NB9SLW             0  A.C.                0    2021-12-15       1.1.0         1.16          True
+17   EQFBTTJDC2NB9SLW        120013  A.C.             V2.3    2021-12-15       1.1.0         1.16          True
+18   E6YAMJ8LPV2ZEP4B             0  A.C.                0    2021-12-15       1.1.0         1.16          True
+19   E6YAMJ8LPV2ZEP4B        110073  A.C.             V2.3    2021-12-15       1.1.0         1.16          True
+20   4N5G7N367KM8GYGW             0  A.C.                0    2021-12-15       1.1.0         1.16          True
+21   4N5G7N367KM8GYGW        120067  A.C.             V2.3    2021-12-15       1.1.0         1.16          True
+22   9H8BEWJ9F45XWJ5J             0  A.C.                0    2021-12-15       1.1.0         1.16          True
+23   9H8BEWJ9F45XWJ5J        120011  A.C.             V2.3    2021-12-15       1.1.0         1.16          True
+24   3RWYKBYASQWEX225             0  A.C.                0    2021-12-15       1.1.0         1.16          True
+25   3RWYKBYASQWEX225        120009  A.C.             V2.3    2021-12-15       1.1.0         1.16          True
+26   5LCBK5B3SFX2ZQ73             0  A.C.                0    2021-12-15       1.1.0         1.16          True
+27   5LCBK5B3SFX2ZQ73        120006  A.C.             V2.3    2021-12-15       1.1.0         1.16          True
+28   Y2TVHM2ALG374ZDL             0  A.C.                0    2021-12-15       1.1.0         1.16          True
+29   Y2TVHM2ALG374ZDL        120008  A.C.             V2.3    2021-12-15       1.1.0         1.16          True
+30   L2HC5FM3FED8ZPTN             0  A.C.                0    2021-12-15       1.1.0         1.16          True
+31   L2HC5FM3FED8ZPTN        120005  A.C.               V1    2021-12-15       1.1.0         1.16          True
+32   86YVD6F4ZSVPNJUT             0  A.C.                0    2021-12-15       1.1.0         1.16          True
+33   86YVD6F4ZSVPNJUT        120073  A.C.             V2.3    2021-12-15       1.1.0         1.16          True
+34   CAN6NRM7GXGVNPG2             0  A.C.                0    2022-01-03       1.1.0         1.16          True
+35   CAN6NRM7GXGVNPG2        100050  A.C.             V2.3    2022-01-03       1.1.0         1.16          True
+36   PD7FGMZXYCS4M875             0  A.C.                0    2022-01-03       1.1.0         1.16          True
+37   PD7FGMZXYCS4M875        100065  A.C.             V2.3    2022-01-03       1.1.0         1.16          True
+38   XQGFXQMA8CC6MSEG             0  A.C.                0    2022-01-04       1.1.0         1.16          True
+39   XQGFXQMA8CC6MSEG        110029  A.C.             V2.3    2022-01-04       1.1.0         1.16          True
+40   J8XLAH3X57H4P442             0  A.C.                0    2021-12-02       1.1.0         1.16          True
+41   J8XLAH3X57H4P442        130032  A.C.             V2.3    2021-12-02       1.1.0         1.16          True
+42   VMJBLEW4M4WALEWQ             0  A.C.                0    2022-01-13       1.1.0         1.16          True
+43   VMJBLEW4M4WALEWQ        100069  A.C.             V2.3    2022-01-13       1.1.0         1.16          True
+44   UT85TJ3WNBUPR2S9             0  A.C.                0    2022-01-13       1.1.0         1.16          True
+45   UT85TJ3WNBUPR2S9        100072  A.C.             V2.3    2022-01-13       1.1.0         1.16          True
+46   DNKH4WSEKYF9LPSY             0  A.C.                0    2022-01-12       1.1.0         1.16          True
+47   DNKH4WSEKYF9LPSY        120032  A.C.             V2.3    2022-01-12       1.1.0         1.16          True
+48   LS7SWNM2243RH93H             0  A.C.                0    2022-01-12       1.1.0         1.16          True
+49   LS7SWNM2243RH93H        100054  A.C.             V2.3    2022-01-12       1.1.0         1.16          True
+50   3824R6QDBW76W2FV             0  A.C.                0    2022-01-12       1.1.0         1.16          True
+51   3824R6QDBW76W2FV        100097  A.C.             V2.3    2022-01-12       1.1.0         1.16          True
+52   QXE8SBYPQQB9CHQL             0  A.C.                0    2022-01-11       1.1.0         1.16          True
+53   QXE8SBYPQQB9CHQL        120014  A.C.             V2.3    2022-01-11       1.1.0         1.16          True
+54   MM48H9CF7WRKRBDZ             0  A.C.                0    2022-01-11       1.1.0         1.16          True
+55   MM48H9CF7WRKRBDZ        100055  A.C.             V2.3    2022-01-11       1.1.0         1.16          True
+56   5WV6MEGTZFYEW9HV             0   ST.                0    2022-01-10       1.1.0         1.16          True
+57   5WV6MEGTZFYEW9HV        110036   ST.             V2.3    2022-01-10       1.1.0         1.16          True
+58   J3DCW6FBXR5M8L3D             0   ST.                0    2022-01-10       1.1.0         1.16          True
+59   J3DCW6FBXR5M8L3D        110005   ST.             V2.3    2022-01-10       1.1.0         1.16          True
+60   TZ2U6MBA7U2FAW58             0  A.C.                0    2021-12-15       1.1.0         1.16          True
+61   TZ2U6MBA7U2FAW58        110095  A.C.             V2.3    2021-12-15       1.1.0         1.16          True
+62   F6ULMR4U3R3QUBHY             0  A.C.                0    2021-12-15       1.1.0         1.16          True
+63   F6ULMR4U3R3QUBHY        120070  A.C.             V2.3    2021-12-15       1.1.0         1.16          True
+64   CBSQ2EX5PVKEH75C             0  A.C.                0    2021-12-07       1.1.0         1.16          True
+65   CBSQ2EX5PVKEH75C        130028  A.C.             V2.3    2021-12-07       1.1.0         1.16          True
+66   GUH22LBBXH4ECY2W             0  A.C.                0    2021-12-08       1.1.0         1.16          True
+67   GUH22LBBXH4ECY2W        130021  A.C.             V2.3    2021-12-08       1.1.0         1.16          True
+68   AHP5Z3JCDMNY89VQ             0  A.C.                0    2021-12-08       1.1.0         1.16          True
+69   AHP5Z3JCDMNY89VQ        130005  A.C.             V2.3    2021-12-08       1.1.0         1.16          True
+70   XPXRVX2RHQQVR774             0  A.C.                0    2021-12-08       1.1.0         1.16          True
+71   XPXRVX2RHQQVR774        130004  A.C.             V2.3    2021-12-08       1.1.0         1.16          True
+72   KERR5EQ4XH6CZSQZ             0  A.C.                0    2021-12-08       1.1.0         1.16          True
+73   KERR5EQ4XH6CZSQZ        130010  A.C.             V2.3    2021-12-08       1.1.0         1.16          True
+74   QY6GTCDEAKVY2YWW             0  A.C.                0    2021-12-08       1.1.0         1.16          True
+75   QY6GTCDEAKVY2YWW        120096  A.C.             V2.3    2021-12-08       1.1.0         1.16          True
+76   KBNP858RVKXZX98R             0  A.C.                0    2021-12-07       1.1.0         1.16          True
+77   KBNP858RVKXZX98R        130016  A.C.             V2.3    2021-12-07       1.1.0         1.16          True
+78   GSJF64CC53YG9LUC             0  A.C.                0    2021-12-07       1.1.0         1.16          True
+79   GSJF64CC53YG9LUC        130013  A.C.             V2.3    2021-12-07       1.1.0         1.16          True
+80   SHKMUUEQH48W45AW             0  A.C.                0    2021-12-07       1.1.0         1.16          True
+81   SHKMUUEQH48W45AW        120095  A.C.             V2.3    2021-12-07       1.1.0         1.16          True
+82   BVKHGRL9RNC7XSLV             0  A.C.                0    2021-12-07       1.1.0         1.16          True
+83   BVKHGRL9RNC7XSLV        130036  A.C.             V2.3    2021-12-07       1.1.0         1.16          True
+84   RMX5D8C7TVXT9CHV             0  A.C.                0    2021-12-07       1.1.0         1.16          True
+85   RMX5D8C7TVXT9CHV        130027  A.C.             V2.3    2021-12-07       1.1.0         1.16          True
+86   WAP3KSX3D9UMPN7U             0  A.C.                0    2021-12-08       1.1.0         1.16          True
+87   WAP3KSX3D9UMPN7U        130003  A.C.             V2.3    2021-12-08       1.1.0         1.16          True
+88   ABNSGMK3K23E6VCE             0  A.C.                0    2021-12-07       1.1.0         1.16          True
+89   ABNSGMK3K23E6VCE        130029  A.C.             V2.3    2021-12-07       1.1.0         1.16          True
+90   67GEP6UCXJVM6Q9A             0  A.C.                0    2021-12-07       1.1.0         1.16          True
+91   67GEP6UCXJVM6Q9A        130030  A.C.             V2.3    2021-12-07       1.1.0         1.16          True
+92   2HRDAWZ8SGM2QZJB             0  A.C.                0    2021-12-03       1.1.0         1.16          True
+93   2HRDAWZ8SGM2QZJB        130048  A.C.             V2.3    2021-12-03       1.1.0         1.16          True
+94   US35SCKE9JKFY6A5             0  A.C.                0    2021-12-07       1.1.0         1.16          True
+95   US35SCKE9JKFY6A5        130019  A.C.             V2.3    2021-12-07       1.1.0         1.16          True
+96   VMDVNVDQQJ53D87E             0  A.C.                0    2021-12-03       1.1.0         1.16          True
+97   VMDVNVDQQJ53D87E        130055  A.C.             V2.3    2021-12-03       1.1.0         1.16          True
+98   U5PU8F2W35AQX3CZ             0  A.C.                0    2021-12-03       1.1.0         1.16          True
+99   U5PU8F2W35AQX3CZ        130051  A.C.             V2.3    2021-12-03       1.1.0         1.16          True
+100  JAZAR4LZ7GFF5KMW             0  A.C.                0    2021-12-03       1.1.0         1.16          True
+101  JAZAR4LZ7GFF5KMW        130045  A.C.             V2.3    2021-12-03       1.1.0         1.16          True
+102  JMUM76SHBEBHHHHV             0  A.C.                0    2021-12-15       1.1.0         1.16          True
+103  JMUM76SHBEBHHHHV        110076  A.C.             V2.3    2021-12-15       1.1.0         1.16          True
+104  MS262U7NGVFT5492             0  A.C.                0    2021-12-02       1.1.0         1.16          True
+105  MS262U7NGVFT5492        130041  A.C.             V2.3    2021-12-02       1.1.0         1.16          True
+106  TST324RH2VJZZQDW             0  A.C.                0    2021-12-08       1.1.0         1.16          True
+107  TST324RH2VJZZQDW        130015  A.C.             V2.3    2021-12-08       1.1.0         1.16          True
+108  PMVS6AGYDUU2BAKA             0  A.C.                0    2021-12-02       1.1.0         1.16          True
+109  PMVS6AGYDUU2BAKA        130033  A.C.             V2.3    2021-12-02       1.1.0         1.16          True
+110  DYJXTB9A47362LWB             0  A.C.                0    2021-12-08       1.1.0         1.16          True
+111  DYJXTB9A47362LWB        130022  A.C.             V2.3    2021-12-08       1.1.0         1.16          True
+112  DCAL7M7QT2JRBDZW             0  A.C.                0    2021-12-08       1.1.0         1.16          True
+113  DCAL7M7QT2JRBDZW        130020  A.C.             V2.3    2021-12-08       1.1.0         1.16          True
+114  7WHRQZBK9SJHLG3N             0  A.C.                0    2021-12-10       1.1.0         1.16          True
+115  7WHRQZBK9SJHLG3N        120058  A.C.             V2.3    2021-12-10       1.1.0         1.16          True
+116  PHE5V7UNVRPGZMV6             0  A.C.                0    2021-12-10       1.1.0         1.16          True
+117  PHE5V7UNVRPGZMV6        120051  A.C.             V2.3    2021-12-10       1.1.0         1.16          True
+118  ZZKGYC8TBNR4T6L6             0  A.C.                0    2021-12-08       1.1.0         1.16          True
+119  ZZKGYC8TBNR4T6L6        130012  A.C.             V2.3    2021-12-08       1.1.0         1.16          True
+120  28WZ76MELGGNYKDX             0  A.C.                0    2021-12-08       1.1.0         1.16          True
+121  28WZ76MELGGNYKDX        120098  A.C.             V2.3    2021-12-08       1.1.0         1.16          True
+122  BBRUAQTGTV33VJ87             0  A.C.                0    2021-12-10       1.1.0         1.16          True
+123  BBRUAQTGTV33VJ87        120048  A.C.             V2.3    2021-12-10       1.1.0         1.16          True
+124  K4HSFF7APTN9ST7F             0  A.C.                0    2021-12-10       1.1.0         1.16          True
+125  K4HSFF7APTN9ST7F        120050  A.C.             V2.3    2021-12-10       1.1.0         1.16          True
+126  76R2L6ZXHUPC93AF             0  A.C.                0    2021-12-08       1.1.0         1.16          True
+127  76R2L6ZXHUPC93AF        130006  A.C.             V2.3    2021-12-08       1.1.0         1.16          True
+128  TAXYS46S4L9F37WD             0  A.C.                0    2021-12-08       1.1.0         1.16          True
+129  TAXYS46S4L9F37WD        130002  A.C.             V2.3    2021-12-08       1.1.0         1.16          True
+130  KYHUV8VXYQX4XY8R             0  A.C.                0    2021-12-15       1.1.0         1.16          True
+131  KYHUV8VXYQX4XY8R        110081  A.C.             V2.3    2021-12-15       1.1.0         1.16          True
+132  PUJMKBMLWRGUVJBX             0  A.C.                0    2021-12-10       1.1.0         1.16          True
+133  PUJMKBMLWRGUVJBX        120044  A.C.             V2.3    2021-12-10       1.1.0         1.16          True
+134  SKWSZTR935WTJMLA             0  A.C.                0    2021-12-15       1.1.0         1.16          True
+135  SKWSZTR935WTJMLA        110085  A.C.             V2.3    2021-12-15       1.1.0         1.16          True
+
+-------------------------------------------------------------------------------------------------------------- 
+
+A UUID is designated with the binary number 01010100 if the entries for the following parameter(s) did not match: 
+	 - Drop App Code
+	 - Hardware Version
+	 - SCC Ripples
+
+
+               UUID Drop App Code  Type Hardware Version Creation date SCC Ripples SCC mpyCross  Start Module
+0  NHQ98WQ5Z4BGF4UK             0  A.C.                0    2021-12-29       1.1.0         1.16          True
+1  NHQ98WQ5Z4BGF4UK        110038  A.C.             V2.3    2021-12-29       1.2.0         1.16          True
+
+-------------------------------------------------------------------------------------------------------------- 
+
+A UUID is designated with the binary number 00010110 if the entries for the following parameter(s) did not match: 
+	 - Hardware Version
+	 - SCC Ripples
+	 - SCC mpyCross
+
+
+               UUID Drop App Code  Type Hardware Version Creation date SCC Ripples SCC mpyCross  Start Module
+0  XKU7YJLH2AZM8X66             0  A.C.                0    2021-12-29       1.1.0         1.16          True
+1  XKU7YJLH2AZM8X66             0  A.C.             V2.3    2021-12-29           0            0          True
+2  WS9DLCDERRUGBKQ5             0  A.C.                0    2022-01-07       1.1.0         1.16          True
+3  WS9DLCDERRUGBKQ5             0  A.C.             V2.3    2022-01-07           0            0          True
+
+-------------------------------------------------------------------------------------------------------------- 
+
+A UUID is designated with the binary number 00011110 if the entries for the following parameter(s) did not match: 
+	 - Hardware Version
+	 - Creation date
+	 - SCC Ripples
+	 - SCC mpyCross
+
+
+               UUID Drop App Code  Type Hardware Version Creation date SCC Ripples SCC mpyCross  Start Module
+0  2C5ENGL9GTLY7S5N             0  A.C.                0    2021-12-29       1.1.0         1.16          True
+1  2C5ENGL9GTLY7S5N             0  A.C.             V2.3    2021-10-05           0            0          True
+
+-------------------------------------------------------------------------------------------------------------- 
+
+A UUID is designated with the binary number 01000000 if the entries for the following parameter(s) did not match: 
+	 - Drop App Code
+
+
+               UUID Drop App Code  Type Hardware Version Creation date SCC Ripples SCC mpyCross  Start Module
+0  XQPAF8NZGQ62AEZN        100049  A.C.             V2.3    2022-01-13       1.1.0         1.16         False
+1  XQPAF8NZGQ62AEZN             0  A.C.             V2.3    2022-01-13       1.1.0         1.16         False
+2  5J3S7M623NNDL4GC        100095   ST.             V2.3    2021-12-22       1.1.0         1.16         False
+3  5J3S7M623NNDL4GC             0   ST.             V2.3    2021-12-22       1.1.0         1.16         False
+4  XYAJGA96HHL4NBZF        110013   ST.             V2.3    2021-12-22       1.1.0         1.16         False
+5  XYAJGA96HHL4NBZF             0   ST.             V2.3    2021-12-22       1.1.0         1.16         False
+6  RWQG4LNSFFCAAKDM        120089   ST.             V2.3    2021-12-08       1.1.0         1.16         False
+7  RWQG4LNSFFCAAKDM             0   ST.             V2.3    2021-12-08       1.1.0         1.16         False
+
+-------------------------------------------------------------------------------------------------------------- 
+
+A UUID is designated with the binary number 01111000 if the entries for the following parameter(s) did not match: 
+	 - Drop App Code
+	 - Type
+	 - Hardware Version
+	 - Creation date
+
+
+               UUID Drop App Code  Type Hardware Version Creation date SCC Ripples SCC mpyCross  Start Module
+0  HBCFTBE6LNDLP53K             0   ST.             V2.3    2021-12-20       1.1.0         1.16         False
+1  HBCFTBE6LNDLP53K        140018  A.C.       V2.3 Pro L    2022-02-18       1.1.0         1.16         False
+
+-------------------------------------------------------------------------------------------------------------- 
+
+A UUID is designated with the binary number 01011110 if the entries for the following parameter(s) did not match: 
+	 - Drop App Code
+	 - Hardware Version
+	 - Creation date
+	 - SCC Ripples
+	 - SCC mpyCross
+
+
+               UUID Drop App Code  Type Hardware Version Creation date SCC Ripples SCC mpyCross  Start Module
+0  RMVBUBWKCMFGBCJD             0  A.C.                0    2022-03-21       1.1.0         1.16          True
+1  RMVBUBWKCMFGBCJD        160082  A.C.       V2.3 Pro L    2022-02-22           0            0          True
+2  CKVH97UURVF8XG6H             0  A.C.                0    2022-03-21       1.1.0         1.16          True
+3  CKVH97UURVF8XG6H        160081  A.C.       V2.3 Pro L    2022-02-21           0            0          True
+
+-------------------------------------------------------------------------------------------------------------- 
+
+A UUID is designated with the binary number 00010000 if the entries for the following parameter(s) did not match: 
+	 - Hardware Version
+
+
+               UUID Drop App Code Type Hardware Version Creation date SCC Ripples SCC mpyCross  Start Module
+0  JWVYGEB425NGCJX2             0  ST.                0    2022-01-14       1.1.0         1.16          True
+1  JWVYGEB425NGCJX2             0  ST.             V2.3    2022-01-14       1.1.0         1.16          True
+
+-------------------------------------------------------------------------------------------------------------- 

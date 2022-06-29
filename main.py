@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import openpyxl
 import datetime
+import sys
 
 pd.options.mode.chained_assignment = None
 
@@ -125,7 +126,11 @@ def setup_erp_three_module_dataframe(start_module: pd.DataFrame, extension_modul
     erp_module = convert_column_value_to(erp_module,
                                          column="Drop App Code",
                                          fill_none=True, to_type=str)
+    erp_module['SCC\nRipples'] = erp_module['SCC\nRipples'].replace({'5.2.4': '0'})
+    erp_module['SCC\nmpyCross'] = erp_module['SCC\nmpyCross'].replace({'1.0.1': '0'})
+
     erp_module = erp_module.rename(columns={'SCC\nRipples': 'SCC Ripples', 'SCC\nmpyCross': 'SCC mpyCross'})
+
     return erp_module
 
 
@@ -239,51 +244,120 @@ def collect_uuids_from_erp_db(dataframe: pd.DataFrame):
     return db_uuid_list
 
 
+def generate_code(entry_one: pd.DataFrame, entry_two: pd.DataFrame, column: str):
+    code_str = '0'
+
+    special_parameters = ['Type', 'Creation date', 'Start Module']
+
+    entry_one = entry_one[column]
+    entry_two = entry_two[column]
+    entries_different = entry_one != entry_two
+    special_column = column in special_parameters
+
+    entry_one_zero = entry_one == '0'
+    entry_two_zero = entry_two == '0'
+
+    if entries_different and not special_column:
+        if entry_one_zero:
+            code_str = 'a'
+        elif entry_two_zero:
+            code_str = 'b'
+        else:
+            code_str = '1'
+
+    if entries_different and special_column:
+        if column == 'Creation date':
+            entry_one_zero = entry_one is pd.NaT
+            entry_two_zero = entry_two is pd.NaT
+
+            if not entry_one_zero and not entry_two_zero:
+                entry_with_earliest_date = entry_one < entry_two
+                if entry_with_earliest_date:
+                    code_str = 'c'
+                else:
+                    code_str = 'd'
+
+            elif entry_one_zero:
+                code_str = 'e'
+
+            elif entry_two_zero:
+                code_str = 'f'
+
+            elif entry_one_zero and entry_two_zero:
+                code_str = 'n'
+
+        else:
+            code_str = '1'
+
+    else:
+        if entry_one_zero and entry_two_zero:
+            code_str = 'n'
+
+    return code_str
+
+
 def create_delta_dictionary(dataframe_concatenated: pd.DataFrame):
     unique_uuids = dataframe_concatenated['UUID'].unique()
+    columns = ['UUID', 'Drop App Code', 'Type', 'Hardware Version', 'Creation date',
+               'SCC Ripples', 'SCC mpyCross', 'Start Module']
     differences_dict = {}
 
     for uuid in unique_uuids:
 
         init = True
-        binary_str = 0
+        code_str = 0
 
-        for column in range(0, 8):
+        for column in columns:
             entry_uuid = dataframe_concatenated[dataframe_concatenated['UUID'] == uuid]
-            entry_df_one = entry_uuid.iloc[0, column]
-            entry_df_two = entry_uuid.iloc[1, column]
-            difference_bool = entry_df_one != entry_df_two
+            entry_df_one = entry_uuid.iloc[0]
+            entry_df_two = entry_uuid.iloc[1]
 
-            if difference_bool:
-                if init:
-                    init = False
-                    binary_str = '1'
-                else:
-                    binary_str += '1'
+            if init:
+                init = False
+                code_str = generate_code(entry_df_one, entry_df_two, column)
+                continue
 
-            else:
-                if init:
-                    init = False
-                    binary_str = '0'
-                else:
-                    binary_str += '0'
+            code_str += generate_code(entry_df_one, entry_df_two, column)
 
         dict_keys = differences_dict.keys()
-        if binary_str not in dict_keys:
-            differences_dict.update({binary_str: []})
-        differences_dict[binary_str].append(uuid)
+
+        if code_str not in dict_keys:
+            differences_dict.update({code_str: []})
+        else:
+            differences_dict[code_str].append(uuid)
 
     return differences_dict
 
 
-def decode_binary_key(binary_key: str):
+def decode_code_key(code_key: str):
     columns = ['UUID', 'Drop App Code', 'Type', 'Hardware Version', 'Creation date',
                'SCC Ripples', 'SCC mpyCross', 'Start Module']
-    print(f'A UUID is designated with the binary number {binary_key} if the entries for the following'
-          f' parameter(s) did not match: ')
-    for binary, column in zip(binary_key, columns):
-        if binary == '1':
-            print(f'\t - {column}')
+    special_parameters = ['Type', 'Creation date', 'Start Module']
+    print(f'UUID(s) flagged with code {code_key} indicating:')
+    for code, column in zip(code_key, columns):
+
+        if code == 'n':
+            print(f'\t Missing ({column}) entries in DataFrames ')
+        if code == '1':
+            print(f'\t Not matching ({column}) entries between DataFrames')
+
+        if column not in special_parameters:
+            if code == 'a':
+                print(f'\t Missing ({column}) entry in first DataFrame ')
+            if code == 'b':
+                print(f'\t Missing ({column}) entry in second DataFrame ')
+
+        else:
+            if column == 'Creation date':
+                if code == 'c':
+                    print(f'\t Earliest ({column}) entry in fist DataFrame')
+                if code == 'd':
+                    print(f'\t Earliest ({column}) entry in second DataFrame')
+                if code == 'e':
+                    print(f'\t Missing ({column}) entry in first DataFrame')
+                if code == 'f':
+                    print(f'\t Missing ({column}) entry in second DataFrame')
+
     print(f'\n')
 
 
@@ -410,6 +484,36 @@ def find_start_module_erp_db(erp_db: pd.DataFrame, ext_uuid: str):
     return start_uuid
 
 
+def temp_print_key_table(dataframe: pd.DataFrame, delta_dict: dict):
+    for key in list(delta_dict.keys()):
+
+        decode_code_key(code_key=key)
+        # print(f'UUID(s) flagged with code: {key}\n')
+        uuid_list = delta_dict[key]
+        init = True
+        key_dataframe = 0
+
+        for uuid in uuid_list:
+            to_append = dataframe[dataframe['UUID'] == uuid]
+
+            if init:
+                key_dataframe = pd.DataFrame(to_append)
+                init = False
+                continue
+
+            key_dataframe = pd.concat([key_dataframe, to_append])
+
+        try:
+            key_dataframe = key_dataframe.reset_index(drop=True)
+            pd.set_option('display.max_rows', key_dataframe.shape[0] + 1)
+            print(key_dataframe)
+            print(
+                f'\n---------------------------------------------------------------------------------------------------'
+                f'----------- \n')
+        except AttributeError:
+            print('Error: key_dataframe is empty!')
+
+
 if __name__ == "__main__":
     start_module_dataframe = pd.read_excel(io="erp/erp_3.1.xlsx", sheet_name="Copy of ST", header=2)
     extension_module_dataframe = pd.read_excel(io="erp/erp_3.1.xlsx", sheet_name="Copy of EXT", header=2)
@@ -428,37 +532,20 @@ if __name__ == "__main__":
                                                        extension_module=extension_module_erp_two)
 
     # pd.set_option('display.max_rows', duplicates_dataframe_one.shape[0] + 1)
-    differences_dataframe = pd.concat([erp_two_module_dataframe,
-                                       erp_three_module_dataframe]).drop_duplicates(keep=False)
-    dataframe_concat = find_duplicates(dataframe=differences_dataframe, column='UUID')
-    dataframe_concat = dataframe_concat.reset_index(drop=True)
+    compiled_dataframes = pd.concat([erp_two_module_dataframe,
+                                     erp_three_module_dataframe]).drop_duplicates(keep=False)
+    different_entries = find_duplicates(dataframe=compiled_dataframes, column='UUID')
+    different_entries = different_entries.reset_index(drop=True)
 
-    result = create_delta_dictionary(dataframe_concatenated=dataframe_concat)
+    result = create_delta_dictionary(dataframe_concatenated=different_entries)
+    # temp_print_key_table(dataframe=compiled_dataframes, delta_dict=result)
 
     try:
-        for key in list(result.keys()):
-
-            decode_binary_key(binary_key=key)
-            uuid_list = result[key]
-            init = True
-            key_dataframe = 0
-
-            for uuid in uuid_list:
-                to_append = differences_dataframe[differences_dataframe['UUID'] == uuid]
-                if init:
-                    key_dataframe = pd.DataFrame(to_append)
-                    init = False
-                    continue
-                key_dataframe = pd.concat([key_dataframe, to_append])
-
-            key_dataframe = key_dataframe.reset_index(drop=True)
-            pd.set_option('display.max_rows', key_dataframe.shape[0] + 1)
-            print(key_dataframe)
-            print(f'\n---------------------------------------------------------------------------------------------------'
-                  f'----------- \n')
+        # sys.stdout = open('delta_entries_erp_2_and_erp_3_delta_code.txt', 'w')
+        print(result)
 
     except Exception as e:
         print(f'An error has occurred: {e.__class__.__name__}, {e}')
 
     finally:
-        print(result)
+        pass
