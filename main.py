@@ -323,8 +323,8 @@ def create_delta_dictionary(dataframe_concatenated: pd.DataFrame):
 
         if code_str not in dict_keys:
             differences_dict.update({code_str: []})
-        else:
-            differences_dict[code_str].append(uuid)
+
+        differences_dict[code_str].append(uuid)
 
     return differences_dict
 
@@ -538,11 +538,11 @@ if __name__ == "__main__":
     different_entries = different_entries.reset_index(drop=True)
 
     result = create_delta_dictionary(dataframe_concatenated=different_entries)
-    # temp_print_key_table(dataframe=compiled_dataframes, delta_dict=result)
+    temp_print_key_table(dataframe=compiled_dataframes, delta_dict=result)
 
     try:
-        # sys.stdout = open('delta_entries_erp_2_and_erp_3_delta_code.txt', 'w')
-        print(result)
+        sys.stdout = open('log/delta_entries_erp_2_and_erp_3_delta_code.txt', 'w')
+        pass
 
     except Exception as e:
         print(f'An error has occurred: {e.__class__.__name__}, {e}')
