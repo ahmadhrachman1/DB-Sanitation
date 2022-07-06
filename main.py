@@ -126,12 +126,62 @@ def setup_erp_three_module_dataframe(start_module: pd.DataFrame, extension_modul
     erp_module = convert_column_value_to(erp_module,
                                          column="Drop App Code",
                                          fill_none=True, to_type=str)
-    erp_module['SCC\nRipples'] = erp_module['SCC\nRipples'].replace({'5.2.4': '0'})
-    erp_module['SCC\nmpyCross'] = erp_module['SCC\nmpyCross'].replace({'1.0.1': '0'})
+    erp_module['Hardware Version'] = erp_module['Hardware Version'].replace({'V2.3 Pro L': 'V2.3', 'V2.3 Pro': 'V2.3'})
+    erp_module['SCC\nRipples'] = erp_module['SCC\nRipples'].replace({'5.2.4': '0', 'VW GMD MAX3': '0'})
+    erp_module['SCC\nmpyCross'] = erp_module['SCC\nmpyCross'].replace({'1.0.1': '0', 'VW GMD MAX3': '0'})
 
     erp_module = erp_module.rename(columns={'SCC\nRipples': 'SCC Ripples', 'SCC\nmpyCross': 'SCC mpyCross'})
 
     return erp_module
+
+
+def setup_erp_module_dataframe(erp_two: pd.DataFrame, erp_three: pd.DataFrame):
+    compiled_dataframes = pd.concat([erp_two, erp_three]).drop_duplicates(keep='first')
+    dict_key = create_delta_dictionary(dataframe_concatenated=compiled_dataframes)
+    init = True
+    erp_dataframe = 0
+
+    unique_uuids_test = dict_key['00000000']
+
+    for uuid in unique_uuids_test:
+        if init:
+            init = False
+            erp_dataframe = pd.DataFrame(compiled_dataframes[compiled_dataframes['UUID'] == uuid])
+        else:
+            erp_dataframe = pd.concat([erp_dataframe,
+                                       compiled_dataframes[compiled_dataframes['UUID'] == uuid]])
+
+    code_key_decision_one = ['0a0a0000', '0a0a0100', '0b000000', '0n0a0000']
+    for code_key in code_key_decision_one:
+        index = 1
+        if code_key == '0b000000':
+            index = 0
+
+        uuids_from_key = dict_key[code_key]
+        for uuid in uuids_from_key:
+            uuid_section = compiled_dataframes[compiled_dataframes['UUID'] == uuid]
+            to_append = uuid_section.iloc[[index]]
+            erp_dataframe = pd.concat([erp_dataframe, to_append], axis=0)
+
+    code_key_decision_two = ['0n0a0bb0', '0n0adbb0', '0a0adbb0']
+    for code_key in code_key_decision_two:
+        uuids_from_key = dict_key[code_key]
+        for uuid in uuids_from_key:
+            uuid_section = compiled_dataframes[compiled_dataframes['UUID'] == uuid]
+
+            replace_with_value = uuid_section.iloc[0, uuid_section.columns.get_loc('SCC Ripples')]
+            uuid_section.iloc[1, uuid_section.columns.get_loc('SCC Ripples')] = replace_with_value
+
+            replace_with_value = uuid_section.iloc[0, uuid_section.columns.get_loc('SCC mpyCross')]
+            uuid_section.iloc[1, uuid_section.columns.get_loc('SCC mpyCross')] = replace_with_value
+
+            to_append = uuid_section.iloc[[1]]
+            erp_dataframe = pd.concat([erp_dataframe, to_append], axis=0)
+
+    pd.set_option('display.max_rows', erp_dataframe.shape[0] + 1)
+    erp_dataframe = erp_dataframe.reset_index(drop=True)
+
+    return erp_dataframe
 
 
 def setup_erp_db_dataframe(erp_db_module: pd.DataFrame):
@@ -298,6 +348,7 @@ def generate_code(entry_one: pd.DataFrame, entry_two: pd.DataFrame, column: str)
 
 def create_delta_dictionary(dataframe_concatenated: pd.DataFrame):
     unique_uuids = dataframe_concatenated['UUID'].unique()
+    total_duplicates = dataframe_concatenated['UUID'].value_counts()
     columns = ['UUID', 'Drop App Code', 'Type', 'Hardware Version', 'Creation date',
                'SCC Ripples', 'SCC mpyCross', 'Start Module']
     differences_dict = {}
@@ -307,17 +358,21 @@ def create_delta_dictionary(dataframe_concatenated: pd.DataFrame):
         init = True
         code_str = 0
 
-        for column in columns:
-            entry_uuid = dataframe_concatenated[dataframe_concatenated['UUID'] == uuid]
-            entry_df_one = entry_uuid.iloc[0]
-            entry_df_two = entry_uuid.iloc[1]
+        if total_duplicates[uuid] == 1:
+            code_str = '00000000'
 
-            if init:
-                init = False
-                code_str = generate_code(entry_df_one, entry_df_two, column)
-                continue
+        else:
+            for column in columns:
+                entry_uuid = dataframe_concatenated[dataframe_concatenated['UUID'] == uuid]
+                entry_df_one = entry_uuid.iloc[0]
+                entry_df_two = entry_uuid.iloc[1]
 
-            code_str += generate_code(entry_df_one, entry_df_two, column)
+                if init:
+                    init = False
+                    code_str = generate_code(entry_df_one, entry_df_two, column)
+                    continue
+
+                code_str += generate_code(entry_df_one, entry_df_two, column)
 
         dict_keys = differences_dict.keys()
 
@@ -334,29 +389,33 @@ def decode_code_key(code_key: str):
                'SCC Ripples', 'SCC mpyCross', 'Start Module']
     special_parameters = ['Type', 'Creation date', 'Start Module']
     print(f'UUID(s) flagged with code {code_key} indicating:')
+
+    if code_key == '00000000':
+        print(f'\tEither the entries are unique or their entries from both DataFrames match')
+
     for code, column in zip(code_key, columns):
 
         if code == 'n':
-            print(f'\t Missing ({column}) entries in DataFrames ')
+            print(f'\tMissing ({column}) entries in DataFrames ')
         if code == '1':
-            print(f'\t Not matching ({column}) entries between DataFrames')
+            print(f'\tNot matching ({column}) entries between DataFrames')
 
         if column not in special_parameters:
             if code == 'a':
-                print(f'\t Missing ({column}) entry in first DataFrame ')
+                print(f'\tMissing ({column}) entry in first DataFrame ')
             if code == 'b':
-                print(f'\t Missing ({column}) entry in second DataFrame ')
+                print(f'\tMissing ({column}) entry in second DataFrame ')
 
         else:
             if column == 'Creation date':
                 if code == 'c':
-                    print(f'\t Earliest ({column}) entry in fist DataFrame')
+                    print(f'\tEarliest ({column}) entry in fist DataFrame')
                 if code == 'd':
-                    print(f'\t Earliest ({column}) entry in second DataFrame')
+                    print(f'\tEarliest ({column}) entry in second DataFrame')
                 if code == 'e':
-                    print(f'\t Missing ({column}) entry in first DataFrame')
+                    print(f'\tMissing ({column}) entry in first DataFrame')
                 if code == 'f':
-                    print(f'\t Missing ({column}) entry in second DataFrame')
+                    print(f'\tMissing ({column}) entry in second DataFrame')
 
     print(f'\n')
 
@@ -480,6 +539,7 @@ def find_start_module_erp_db(erp_db: pd.DataFrame, ext_uuid: str):
 
             if ext_uuid in elements_to_inspect:
                 start_uuid = row_to_inspect[column_start]
+                break
 
     return start_uuid
 
@@ -515,34 +575,105 @@ def temp_print_key_table(dataframe: pd.DataFrame, delta_dict: dict):
 
 
 if __name__ == "__main__":
-    start_module_dataframe = pd.read_excel(io="erp/erp_3.1.xlsx", sheet_name="Copy of ST", header=2)
-    extension_module_dataframe = pd.read_excel(io="erp/erp_3.1.xlsx", sheet_name="Copy of EXT", header=2)
-    erp_three_module_dataframe = setup_erp_three_module_dataframe(start_module=start_module_dataframe,
-                                                                  extension_module=extension_module_dataframe)
-
-    erp_db_module_dataframe = pd.read_excel(io="erp/erp_3.1.xlsx", sheet_name='DB', header=1)
-    erp_db_module_dataframe = setup_erp_db_dataframe(erp_db_module=erp_db_module_dataframe)
-
-    sccconfig_dataframe = pd.read_csv(filepath_or_buffer="db/sccconfig")
-    sccconfig_dataframe = setup_sccconfig_dataframe(sccconfig=sccconfig_dataframe)
-
     start_module_erp_two = pd.read_excel(io="erp/CX_ERP_V2.xlsx", sheet_name="ST", header=2)
     extension_module_erp_two = pd.read_excel(io="erp/CX_ERP_V2.xlsx", sheet_name="EXT", header=2)
     erp_two_module_dataframe = setup_erp_two_dataframe(start_module=start_module_erp_two,
                                                        extension_module=extension_module_erp_two)
 
-    # pd.set_option('display.max_rows', duplicates_dataframe_one.shape[0] + 1)
-    compiled_dataframes = pd.concat([erp_two_module_dataframe,
-                                     erp_three_module_dataframe]).drop_duplicates(keep=False)
-    different_entries = find_duplicates(dataframe=compiled_dataframes, column='UUID')
-    different_entries = different_entries.reset_index(drop=True)
+    start_module_erp_three = pd.read_excel(io="erp/erp_3.1.xlsx", sheet_name="Copy of ST", header=2)
+    extension_module_erp_three = pd.read_excel(io="erp/erp_3.1.xlsx", sheet_name="Copy of EXT", header=2)
+    erp_three_module_dataframe = setup_erp_three_module_dataframe(start_module=start_module_erp_three,
+                                                                  extension_module=extension_module_erp_three)
 
-    result = create_delta_dictionary(dataframe_concatenated=different_entries)
-    temp_print_key_table(dataframe=compiled_dataframes, delta_dict=result)
+    erp_three_db_module_dataframe = pd.read_excel(io="erp/erp_3.1.xlsx", sheet_name='DB', header=1)
+    erp_three_db_module_dataframe = setup_erp_db_dataframe(erp_db_module=erp_three_db_module_dataframe)
+
+    sccconfig_dataframe = pd.read_csv(filepath_or_buffer="db/sccconfig")
+    sccconfig_dataframe = setup_sccconfig_dataframe(sccconfig=sccconfig_dataframe)
+
+    erp_module_dataframe = setup_erp_module_dataframe(erp_two=erp_two_module_dataframe,
+                                                      erp_three=erp_three_module_dataframe)
+
+    concatenated_dataframe = pd.concat([erp_module_dataframe,
+                                        sccconfig_dataframe]).drop_duplicates(keep='first')
+    delta_dict_experiment = create_delta_dictionary(dataframe_concatenated=concatenated_dataframe)
+
+    columns_sample_df = ['UUID', 'Drop App Code', 'Type', 'Hardware Version', 'Creation date',
+                         'SCC Ripples', 'SCC mpyCross', 'Start Module']
+    result_test = 0
+    delta_dict_keys = list(delta_dict_experiment.keys())
+    take_first_value_test = True
+    init_test = True
 
     try:
-        sys.stdout = open('log/delta_entries_erp_2_and_erp_3_delta_code.txt', 'w')
-        pass
+        # sys.stdout = open('log/delta_entries_erp_and_sccconfig_delta_code.txt', 'w')
+        for delta_key in delta_dict_keys:
+            delta_code_sample = delta_key
+            uuid_sample_list = delta_dict_experiment[delta_code_sample]
+
+            for uuid_sample in uuid_sample_list:
+                dataframe_section = concatenated_dataframe[concatenated_dataframe['UUID'] == uuid_sample]
+                index_test = 1
+
+                if delta_key == '00000000':
+                    index_test = 0
+
+                to_append_row = dataframe_section.iloc[[index_test]]
+
+                for delta, column_test in zip(delta_code_sample, columns_sample_df):
+                    column_index = dataframe_section.columns.get_loc(column_test)
+
+                    if delta == 'a' or delta == 'd' or delta == 'e' or delta == 'n' or delta == '0':
+                        continue
+
+                    if delta == 'b' or delta == 'c' or delta == 'f':
+                        value_to_add = dataframe_section.iloc[0, column_index]
+
+                        if column_test == 'Drop App Code':
+                            if value_to_add[0] == 'O' or value_to_add[0] == 'L':
+                                continue
+
+                        to_append_row[column_test] = value_to_add
+
+                    if delta == '1':
+                        first_value_test = dataframe_section.iloc[0, column_index]
+                        second_value_test = dataframe_section.iloc[1, column_index]
+
+                        if take_first_value_test and column_test != 'SCC Ripples':
+                            value_to_add = dataframe_section.iloc[0, column_index]
+                            to_append_row[column_test] = value_to_add
+
+                        else:
+                            continue
+
+                if init_test:
+                    init_test = False
+                    result_test = pd.DataFrame(to_append_row)
+                else:
+                    result_test = pd.concat([result_test, to_append_row])
+
+        result_test = result_test.sort_values(by='Creation date')
+        result_test = result_test.reset_index(drop=True)
+        pd.set_option('display.max_rows', concatenated_dataframe.shape[0] + 1)
+
+        start_module_uuids = []
+        uuid_ext_list = delta_dict_experiment['0b10e000']
+        for uuid_ext in uuid_ext_list:
+            start_module_uuid = find_start_module_erp_db(erp_db=erp_three_db_module_dataframe, ext_uuid=uuid_ext)
+            if start_module_uuid not in start_module_uuids:
+                start_module_uuids.append(start_module_uuid)
+
+        for start_module_uuid in start_module_uuids:
+            print(f'UUID: {start_module_uuid}')
+            print(f'erp: {erp_module_dataframe[erp_module_dataframe["UUID"] == start_module_uuid].loc[:, ["Type"]]}')
+            print(f'scc: {sccconfig_dataframe[sccconfig_dataframe["UUID"] == start_module_uuid].loc[:, ["Type"]]}')
+            print(f'====================================================================================\n')
+
+        # print(sccconfig_dataframe[sccconfig_dataframe['UUID'] == 'T7KH0BSVXGBNBKE1'])
+        # with pd.ExcelWriter('log/Log.xlsx', engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
+        #     result_test.to_excel(writer, sheet_name='Final list (ERP Prio)', index=False)
+
+        # temp_print_key_table(dataframe=concatenated_dataframe, delta_dict=delta_dict_experiment)
 
     except Exception as e:
         print(f'An error has occurred: {e.__class__.__name__}, {e}')
