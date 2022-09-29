@@ -68,7 +68,7 @@ def remove_quotes_na(
     return dataframe
 
 
-def append_start_module_column(
+def create_start_module_column(
         dataframe: pd.DataFrame,
         is_start_module: bool
 ) -> list:
@@ -113,7 +113,7 @@ def setup_erp_two_dataframe(
          }
     )
 
-    is_start_module_true = append_start_module_column(
+    is_start_module_true = create_start_module_column(
         dataframe=start_module,
         is_start_module=True
     )
@@ -121,7 +121,7 @@ def setup_erp_two_dataframe(
 
     # Setting up extension module sheet (EXT)
     extension_module = extension_module.loc[1:245, :]
-    is_start_module_false = append_start_module_column(
+    is_start_module_false = create_start_module_column(
         dataframe=extension_module,
         is_start_module=False
     )
@@ -191,7 +191,7 @@ def setup_erp_three_module_dataframe(
     drop_columns_extension = [
         "Hardware Version & Type",
         "Extension Module Pre-Production Status",
-        "Assigned to Customer ID",
+        "Assigned to Customer",
         "Assigned to Order ID"
     ]
 
@@ -205,8 +205,23 @@ def setup_erp_three_module_dataframe(
     start_module = remove_quotes_na(start_module, column="SCC\nmpyCross")
 
     # Append 'Start Module' column
-    is_start_module_true = append_start_module_column(start_module, True)
+    is_start_module_true = create_start_module_column(start_module, True)
     start_module['Start Module'] = is_start_module_true
+
+    # Remove decimal places from Drop App Code
+    start_module = adjust_column_values(
+        start_module,
+        column="Drop App Code",
+        fill_none=True,
+        to_type=int
+    )
+
+    start_module = adjust_column_values(
+        start_module,
+        column="Drop App Code",
+        fill_none=True,
+        to_type=str
+    )
 
     # Extension module
     # Selecting relevant rows and columns
@@ -218,7 +233,7 @@ def setup_erp_three_module_dataframe(
     extension_module = remove_quotes_na(extension_module, column="SCC\nmpyCross")
 
     # Append 'Start Module' column
-    is_start_module_false = append_start_module_column(extension_module, False)
+    is_start_module_false = create_start_module_column(extension_module, False)
     extension_module['Start Module'] = is_start_module_false
 
     # Concatenation
@@ -706,7 +721,6 @@ def find_missing_values(
         dataframe2: pd.DataFrame,
         column: str
 ) -> pd.DataFrame:
-
     missing_values_dataframe = pd.DataFrame()
 
     for value in dataframe1[column]:
@@ -731,7 +745,6 @@ def find_common_entries(
         dataframe1: pd.DataFrame,
         dataframe2: pd.DataFrame
 ) -> pd.DataFrame:
-
     common_entries_dataframe = dataframe1.merge(
         dataframe2,
         how='inner',
@@ -749,7 +762,6 @@ def find_different_entries(
         dataframe2: pd.DataFrame,
         column: str
 ) -> Union[pd.DataFrame, str]:
-
     concatenated_dataframe = pd.concat([dataframe1, dataframe2]).drop_duplicates(keep=False)
     concatenated_uuids = pd.DataFrame()
 
@@ -783,7 +795,6 @@ def find_start_module_erp_db(
         erp_db: pd.DataFrame,
         ext_uuid: str
 ) -> str:
-
     max_length = erp_db.shape[0]
     start_uuid = ''
 
@@ -904,7 +915,6 @@ def parse_delta_dict(
         concatenated_dataframe: pd.DataFrame,
         delta_dict_prev: dict
 ) -> pd.DataFrame:
-
     delta_dict_prev_keys = delta_dict_prev.keys()
 
     for delta_code in delta_dict_prev_keys:
@@ -945,8 +955,11 @@ if __name__ == "__main__":
 
     start_module_erp_three = pd.read_excel(io="erp/erp_3.1.xlsx", sheet_name="Copy of ST", header=2)
     extension_module_erp_three = pd.read_excel(io="erp/erp_3.1.xlsx", sheet_name="Copy of EXT", header=2)
-    erp_three_module_dataframe = setup_erp_three_module_dataframe(start_module=start_module_erp_three,
-                                                                  extension_module=extension_module_erp_three)
+
+    erp_three_module_dataframe = setup_erp_three_module_dataframe(
+        start_module=start_module_erp_three,
+        extension_module=extension_module_erp_three
+    )
 
     erp_three_db_module_dataframe = pd.read_excel(io="erp/erp_3.1.xlsx", sheet_name='DB', header=1)
     erp_three_db_module_dataframe = setup_erp_db_dataframe(erp_db=erp_three_db_module_dataframe)
@@ -998,33 +1011,24 @@ if __name__ == "__main__":
     delta_table_20220713_parsed = format_delta_table(dataframe=log_dataframe_20220713_parsed,
                                                      delta_code_dict=log_delta_dict_20220713_parsed)
 
+    # Preparing ERP 20220929 input
+    start_module_erp_three_20220929 = pd.read_excel(io="erp/ERP_3.1_20220929.xlsx",
+                                                    sheet_name="ST",
+                                                    header=2)
+    extension_module_erp_three_20220929 = pd.read_excel(io="erp/ERP_3.1_20220929.xlsx",
+                                                        sheet_name="EXT",
+                                                        header=2)
+    erp_three_module_dataframe_20220929 = setup_erp_three_module_dataframe(
+        start_module=start_module_erp_three_20220929,
+        extension_module=extension_module_erp_three_20220929).dropna()
+
     pd.set_option('display.max_rows', 10000)
+    print(erp_three_module_dataframe_20220929)
 
-    # Validating missiing drop id entries
-    log_dataframe_ = pd.concat([erp_three_module_dataframe_20220713, sccconfig_dataframe_20220713])
-    log_delta_dict_ = generate_delta_dictionary(log_dataframe_)
-
-    missing_drop_id_uuids = pd.read_excel(io='missiing drop id.xlsx', sheet_name='Sheet1')
-    missing_drop_id_uuids = missing_drop_id_uuids['Serial number'].to_list()
-
-    drop_id_in_erp_uuids = []
-
-    for uuid_ in missing_drop_id_uuids:
-        for delta_code_, uuids_ in log_delta_dict_.items():
-            if uuid_ in uuids_ and delta_code_[:2] == '0b':
-                drop_id_in_erp_uuids.append(uuid_)
-
-    print(
-        find_missing_values(
-            dataframe1=erp_three_module_dataframe,
-            dataframe2=sccconfig_dataframe,
-            column='UUID'
-        )
-    )
     # Write results
-    # with open('log/delta_entries_erp_and_sccconfig_delta_20220602-20220713_parsed.txt', 'w') as f:
+    # with open('log/delta_entries_erp_and_sccconfig_delta_20220602-20220713_parsed.txt', 'w+') as f:
     #     f.write(delta_table_20220713_parsed)
     #
     # import json
-    # with open('delta_dict_20220602-20220713_parsed.json', 'w') as f:
-    #     json.dump(log_delta_dict_20220713_parsed, f)
+    # with open('delta_dict_20220602-20220713_parsed.json', 'w+') as f:
+    #     json.dump(log_delta_dict_20220713_parsed, f, indent=2)
