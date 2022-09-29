@@ -948,79 +948,135 @@ def get_delta_code_group(column: str, delta_dict: dict) -> list:
 
 if __name__ == "__main__":
     # Preparing ERP input
-    start_module_erp_two = pd.read_excel(io="erp/CX_ERP_V2.xlsx", sheet_name="ST", header=2)
-    extension_module_erp_two = pd.read_excel(io="erp/CX_ERP_V2.xlsx", sheet_name="EXT", header=2)
-    erp_two_module_dataframe = setup_erp_two_dataframe(start_module=start_module_erp_two,
-                                                       extension_module=extension_module_erp_two)
+    # ERP V2
+    start_module_erp_two = pd.read_excel(
+        io="erp/CX_ERP_V2.xlsx",
+        sheet_name="ST",
+        header=2
+    )
+    extension_module_erp_two = pd.read_excel(
+        io="erp/CX_ERP_V2.xlsx",
+        sheet_name="EXT",
+        header=2
+    )
+    erp_two_module_dataframe = setup_erp_two_dataframe(
+        start_module=start_module_erp_two,
+        extension_module=extension_module_erp_two
+    )
 
-    start_module_erp_three = pd.read_excel(io="erp/erp_3.1.xlsx", sheet_name="Copy of ST", header=2)
-    extension_module_erp_three = pd.read_excel(io="erp/erp_3.1.xlsx", sheet_name="Copy of EXT", header=2)
+    # ERP V3
+    start_module_erp_three = pd.read_excel(
+        io="erp/erp_3.1.xlsx",
+        sheet_name="Copy of ST",
+        header=2
+    )
+    extension_module_erp_three = pd.read_excel(
+        io="erp/erp_3.1.xlsx",
+        sheet_name="Copy of EXT",
+        header=2
+    )
 
     erp_three_module_dataframe = setup_erp_three_module_dataframe(
         start_module=start_module_erp_three,
         extension_module=extension_module_erp_three
     )
 
-    erp_three_db_module_dataframe = pd.read_excel(io="erp/erp_3.1.xlsx", sheet_name='DB', header=1)
+    # DB Sheet from ERP V3
+    erp_three_db_module_dataframe = pd.read_excel(
+        io="erp/erp_3.1.xlsx",
+        sheet_name='DB',
+        header=1
+    )
     erp_three_db_module_dataframe = setup_erp_db_dataframe(erp_db=erp_three_db_module_dataframe)
 
-    concatenated_dataframe_ = pd.concat([erp_two_module_dataframe, erp_three_module_dataframe]).drop_duplicates(
-        keep='first')
-    delta_dict_ = generate_delta_dictionary(concatenated_dataframe=concatenated_dataframe_)
-    erp_module_dataframe = setup_filtered_list(concatenated_dataframe_, delta_dict_)
+    # Joining ERP V2 & V3
+    erp_concatenated_dataframe = pd.concat([
+        erp_two_module_dataframe,
+        erp_three_module_dataframe
+    ]).drop_duplicates(keep='first')
+    delta_dict_ = generate_delta_dictionary(concatenated_dataframe=erp_concatenated_dataframe)
+    erp_module_dataframe = setup_filtered_list(
+        erp_concatenated_dataframe,
+        delta_dict_
+    )
 
     # Preparing DB input
     sccconfig_dataframe = pd.read_csv(filepath_or_buffer="db/sccconfig")
     sccconfig_dataframe = setup_sccconfig_dataframe(sccconfig=sccconfig_dataframe)
 
     # Creating delta between ERP and DB
-    log_dataframe = pd.concat([erp_module_dataframe, sccconfig_dataframe]).drop_duplicates(keep='first')
+    log_dataframe = pd.concat([
+        erp_module_dataframe,
+        sccconfig_dataframe
+    ]).drop_duplicates(keep='first')
+
+    # Generating delta codes and saving result
     log_delta_dict = generate_delta_dictionary(concatenated_dataframe=log_dataframe)
     delta_table = format_delta_table(log_dataframe, log_delta_dict)
     # with open('log/delta_entries_erp_and_sccconfig_delta_20220712.txt', 'w') as f:
     #     f.write(delta_table)
 
     # Preparing ERP 20220713 input
-    start_module_erp_three_20220713 = pd.read_excel(io="erp/erp_3.1_20220713.xlsx",
-                                                    sheet_name="ST",
-                                                    header=2)
-    extension_module_erp_three_20220713 = pd.read_excel(io="erp/erp_3.1_20220713.xlsx",
-                                                        sheet_name="EXT",
-                                                        header=2)
+    start_module_erp_three_20220713 = pd.read_excel(
+        io="erp/erp_3.1_20220713.xlsx",
+        sheet_name="ST",
+        header=2
+    )
+
+    extension_module_erp_three_20220713 = pd.read_excel(
+        io="erp/erp_3.1_20220713.xlsx",
+        sheet_name="EXT",
+        header=2
+    )
+
     erp_three_module_dataframe_20220713 = setup_erp_three_module_dataframe(
         start_module=start_module_erp_three_20220713,
-        extension_module=extension_module_erp_three_20220713).dropna()
+        extension_module=extension_module_erp_three_20220713
+    ).dropna()
 
     # Preparing DB 20220713 input
     sccconfig_dataframe_20220713 = pd.read_csv(filepath_or_buffer="db/sccconfig_20220713")
     sccconfig_dataframe_20220713 = setup_sccconfig_dataframe(sccconfig=sccconfig_dataframe_20220713)
 
     # Creating delta between ERP and DB 20220713
-    log_dataframe_20220713 = pd.concat([erp_three_module_dataframe_20220713[
-                                            erp_three_module_dataframe_20220713['Creation date'] > '2022-06-02'],
-                                        sccconfig_dataframe_20220713[
-                                            sccconfig_dataframe_20220713['Creation date'] > '2022-06-02']
-                                        ]).drop_duplicates(keep='first')
+    log_dataframe_20220713 = pd.concat(
+        [erp_three_module_dataframe_20220713[
+             erp_three_module_dataframe_20220713['Creation date'] > '2022-06-02'],
+         sccconfig_dataframe_20220713[
+             sccconfig_dataframe_20220713['Creation date'] > '2022-06-02']]
+    ).drop_duplicates(keep='first')
     log_delta_dict_20220713 = generate_delta_dictionary(concatenated_dataframe=log_dataframe_20220713)
     delta_table_20220713 = format_delta_table(log_dataframe_20220713, log_delta_dict_20220713)
 
     # Parsing delta
-    log_dataframe_20220713_parsed = parse_delta_dict(concatenated_dataframe=log_dataframe_20220713,
-                                                     delta_dict_prev=log_delta_dict_20220713)
+    log_dataframe_20220713_parsed = parse_delta_dict(
+        concatenated_dataframe=log_dataframe_20220713,
+        delta_dict_prev=log_delta_dict_20220713
+    )
+
     log_delta_dict_20220713_parsed = generate_delta_dictionary(concatenated_dataframe=log_dataframe_20220713_parsed)
-    delta_table_20220713_parsed = format_delta_table(dataframe=log_dataframe_20220713_parsed,
-                                                     delta_code_dict=log_delta_dict_20220713_parsed)
+    delta_table_20220713_parsed = format_delta_table(
+        dataframe=log_dataframe_20220713_parsed,
+        delta_code_dict=log_delta_dict_20220713_parsed
+    )
 
     # Preparing ERP 20220929 input
-    start_module_erp_three_20220929 = pd.read_excel(io="erp/ERP_3.1_20220929.xlsx",
-                                                    sheet_name="ST",
-                                                    header=2)
-    extension_module_erp_three_20220929 = pd.read_excel(io="erp/ERP_3.1_20220929.xlsx",
-                                                        sheet_name="EXT",
-                                                        header=2)
+    start_module_erp_three_20220929 = pd.read_excel(
+        io="erp/ERP_3.1_20220929.xlsx",
+        sheet_name="ST",
+        header=2
+    )
+
+    extension_module_erp_three_20220929 = pd.read_excel(
+        io="erp/ERP_3.1_20220929.xlsx",
+        sheet_name="EXT",
+        header=2
+    )
+
     erp_three_module_dataframe_20220929 = setup_erp_three_module_dataframe(
         start_module=start_module_erp_three_20220929,
-        extension_module=extension_module_erp_three_20220929).dropna()
+        extension_module=extension_module_erp_three_20220929
+    ).dropna()
 
     pd.set_option('display.max_rows', 10000)
     print(erp_three_module_dataframe_20220929)
