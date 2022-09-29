@@ -3,3 +3,4 @@ erp/
 venv/
 .idea/
 /log/
+*.json
