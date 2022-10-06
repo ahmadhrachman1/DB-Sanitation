@@ -8,12 +8,14 @@ COLUMNS = [
 ]
 
 CODE_DESCR = {
-    'n': 'Missing ({column}) entries in both DataFrames',
-    '1': 'Not matching ({column}) entries between both DataFrames',
-    'a': 'Missing ({column}) entry in first DataFrame',
-    'b': 'Missing ({column}) entry in second DataFrame',
-    'c': 'Earliest ({column}) entry in fist DataFrame',
-    'd': 'Earliest ({column}) entry in second DataFrame'
+    'a': 'Missing ({column}) entry in ERP',
+    'b': 'Missing ({column}) entry in SCCConfig',
+    'c': 'Earliest ({column}) entry in ERP',
+    'd': 'Earliest ({column}) entry in SCCConfig',
+    'f': 'Not matching ({column}) entries between both ERP and SCCConfig',
+    'n': 'Missing ({column}) entries in both ERP and SCCConfig',
+    '1': '({column}) entry only found in ERP',
+    '2': '({column}) entry only found in SCCConfig'
 }
 
 pd.options.mode.chained_assignment = None
@@ -310,7 +312,9 @@ def setup_erp_module_dataframe(
     ).drop_duplicates(keep=False)
 
     # Delta dictionary created for filter process
-    delta_dict = generate_delta_dictionary(concatenated_dataframe=concatenated_dataframe)
+    delta_dict = generate_delta_dictionary(
+        concatenated_dataframe=concatenated_dataframe,
+        midpoint=erp_two.shape[0])
 
     # Defining empty dataframe
     erp_dataframe = pd.DataFrame()
@@ -524,7 +528,9 @@ def collect_uuids_from_erp_db(erp_db: pd.DataFrame) -> list:
 def generate_code(
         erp: pd.DataFrame,
         sccconfig: pd.DataFrame,
-        column: str
+        column: str,
+        midpoint: int,
+        is_duplicate: bool = False
 ) -> str:
     """
     Generates the delta code by taking each property for each dataframe and compares
@@ -547,41 +553,55 @@ def generate_code(
 
         - Possible codes:
 
-            'n': 'Missing ({column}) entries in both DataFrames',
-            '1': 'Not matching ({column}) entries between both DataFrames',
-            'a': 'Missing ({column}) entry in first DataFrame',
-            'b': 'Missing ({column}) entry in second DataFrame',
-            'c': 'Earliest ({column}) entry in fist DataFrame',
-            'd': 'Earliest ({column}) entry in second DataFrame'
+            'a': 'Missing ({column}) entry in ERP',
+            'b': 'Missing ({column}) entry in SCCConfig',
+            'c': 'Earliest ({column}) entry in ERP',
+            'd': 'Earliest ({column}) entry in SCCConfig',
+            'f': 'Not matching ({column}) entries between both ERP and SCCConfig',
+            'n': 'Missing ({column}) entries in both ERP and SCCConfig',
+            '1': '({column}) entry only found in ERP',
+            '2': '({column}) entry only found in SCCConfig'
+
     Args:
         erp: (Dataframe) Entries from ERP
         sccconfig: (Dataframe) Entries from SCC config
-        column: (String) column name
-
+        column: (String) Column name
+        midpoint: (Integer) Index where ERP and SCC are joined
+        is_duplicate: (Boolean) Indicates if erp == sccconfig. It
+                                assumes that erp and sccconfig are not
+                                the same
     Returns:
         delta_code: (String) one possible code
     """
-    erp = erp[column]
-    sccconfig = sccconfig[column]
 
-    entry_one_null = erp == '0' or erp is pd.NaT
-    entry_two_null = sccconfig == '0' or sccconfig is pd.NaT
+    erp_value = erp[column]
+    sccconfig_value = sccconfig[column]
+
+    entry_one_null = erp_value == '0' or erp_value is pd.NaT
+    entry_two_null = sccconfig_value == '0' or sccconfig_value is pd.NaT
 
     if entry_one_null and entry_two_null:
         return 'n'
+
+    if is_duplicate:
+        if erp.name < midpoint:
+            return '1'
+        elif sccconfig.name >= midpoint:
+            return '2'
+
     if entry_one_null:
         return 'a'
     if entry_two_null:
         return 'b'
-    if erp == sccconfig:
+    if erp_value == sccconfig_value:
         return '0'
 
-    delta_code = '1'
+    delta_code = 'f'
     # If both entries exist and are not the same, there is a discrepancy
 
     # Potentially specify discrepancy further
     if column == 'Creation date':
-        entry_with_earliest_date = erp < sccconfig
+        entry_with_earliest_date = erp_value < sccconfig_value
         if entry_with_earliest_date:
             delta_code = 'c'
         else:
@@ -590,7 +610,10 @@ def generate_code(
     return delta_code
 
 
-def generate_delta_dictionary(concatenated_dataframe: pd.DataFrame) -> dict:
+def generate_delta_dictionary(
+        concatenated_dataframe: pd.DataFrame,
+        midpoint: int
+) -> dict:
     """
     Generates a dictionary containing delta codes, a code system for indicating
     discrepancies of entries from a module (UUID) found in both the ERP and
@@ -599,7 +622,7 @@ def generate_delta_dictionary(concatenated_dataframe: pd.DataFrame) -> dict:
 
     Args:
         concatenated_dataframe: (Dataframe) ERP and SCC config grouped
-
+        midpoint: (Integer) Index where ERP and SCC are joined
     Returns:
         delta_codes_dict: (Dictionary) Collection of delta codes, along with
                           the corresponding UUIDs
@@ -616,12 +639,20 @@ def generate_delta_dictionary(concatenated_dataframe: pd.DataFrame) -> dict:
         entry_uuid = concatenated_dataframe[concatenated_dataframe['UUID'] == uuid]
         entry_erp = entry_uuid.iloc[0]
         entry_sccconfig = entry_erp
+        is_duplicate = True
 
         if total_duplicates[uuid] > 1:
             entry_sccconfig = entry_uuid.iloc[1]
+            is_duplicate = False
 
         for column in COLUMNS:
-            delta_code += generate_code(entry_erp, entry_sccconfig, column)
+            delta_code += generate_code(
+                entry_erp,
+                entry_sccconfig,
+                column,
+                midpoint,
+                is_duplicate
+            )
 
         dict_keys = delta_codes_dict.keys()
 
@@ -645,7 +676,7 @@ def decode_code_key(delta_code: str) -> str:
     delta_code_parts = [f'UUID(s) flagged with delta code {delta_code} indicating:']
 
     if delta_code == '00000000':
-        delta_code_parts.append('\tEither the entries are unique or their entries from both DataFrames match')
+        delta_code_parts.append('\tEntries from both ERP and SCCConfig match')
 
     for code, column in zip(delta_code, COLUMNS):
         try:
@@ -892,7 +923,7 @@ def setup_filtered_list(concatenated_dataframe: pd.DataFrame, delta_dict: dict,
                     value_to_add = dataframe_section.iloc[0, column_index]
                     to_append_row[column] = value_to_add
 
-                if delta == '1':
+                if delta == 'f':
                     first_value = dataframe_section.iloc[0, column_index]
 
                     if take_first_value and column != 'SCC Ripples':
@@ -963,102 +994,102 @@ if __name__ == "__main__":
         start_module=start_module_erp_two,
         extension_module=extension_module_erp_two
     )
+    #
+    # # ERP V3
+    # start_module_erp_three = pd.read_excel(
+    #     io="erp/erp_3.1.xlsx",
+    #     sheet_name="Copy of ST",
+    #     header=2
+    # )
+    # extension_module_erp_three = pd.read_excel(
+    #     io="erp/erp_3.1.xlsx",
+    #     sheet_name="Copy of EXT",
+    #     header=2
+    # )
+    #
+    # erp_three_module_dataframe = setup_erp_three_module_dataframe(
+    #     start_module=start_module_erp_three,
+    #     extension_module=extension_module_erp_three
+    # )
 
-    # ERP V3
-    start_module_erp_three = pd.read_excel(
-        io="erp/erp_3.1.xlsx",
-        sheet_name="Copy of ST",
-        header=2
-    )
-    extension_module_erp_three = pd.read_excel(
-        io="erp/erp_3.1.xlsx",
-        sheet_name="Copy of EXT",
-        header=2
-    )
-
-    erp_three_module_dataframe = setup_erp_three_module_dataframe(
-        start_module=start_module_erp_three,
-        extension_module=extension_module_erp_three
-    )
-
-    # DB Sheet from ERP V3
-    erp_three_db_module_dataframe = pd.read_excel(
-        io="erp/erp_3.1.xlsx",
-        sheet_name='DB',
-        header=1
-    )
-    erp_three_db_module_dataframe = setup_erp_db_dataframe(erp_db=erp_three_db_module_dataframe)
-
-    # Joining ERP V2 & V3
-    erp_concatenated_dataframe = pd.concat([
-        erp_two_module_dataframe,
-        erp_three_module_dataframe
-    ]).drop_duplicates(keep='first')
-    delta_dict_ = generate_delta_dictionary(concatenated_dataframe=erp_concatenated_dataframe)
-    erp_module_dataframe = setup_filtered_list(
-        erp_concatenated_dataframe,
-        delta_dict_
-    )
-
+    # # DB Sheet from ERP V3
+    # erp_three_db_module_dataframe = pd.read_excel(
+    #     io="erp/erp_3.1.xlsx",
+    #     sheet_name='DB',
+    #     header=1
+    # )
+    # erp_three_db_module_dataframe = setup_erp_db_dataframe(erp_db=erp_three_db_module_dataframe)
+    #
+    # # Joining ERP V2 & V3
+    # erp_concatenated_dataframe = pd.concat([
+    #     erp_two_module_dataframe,
+    #     erp_three_module_dataframe
+    # ]).drop_duplicates(keep='first')
+    # delta_dict_ = generate_delta_dictionary(concatenated_dataframe=erp_concatenated_dataframe)
+    # erp_module_dataframe = setup_filtered_list(
+    #     erp_concatenated_dataframe,
+    #     delta_dict_
+    # )
+    #
     # Preparing DB input
     sccconfig_dataframe = pd.read_csv(filepath_or_buffer="db/sccconfig")
     sccconfig_dataframe = setup_sccconfig_dataframe(sccconfig=sccconfig_dataframe)
 
-    # Creating delta between ERP and DB
-    log_dataframe = pd.concat([
-        erp_module_dataframe,
-        sccconfig_dataframe
-    ]).drop_duplicates(keep='first')
-
-    # Generating delta codes and saving result
-    log_delta_dict = generate_delta_dictionary(concatenated_dataframe=log_dataframe)
-    delta_table = format_delta_table(log_dataframe, log_delta_dict)
-    # with open('log/delta_entries_erp_and_sccconfig_delta_20220712.txt', 'w') as f:
-    #     f.write(delta_table)
-
-    # Preparing ERP 20220713 input
-    start_module_erp_three_20220713 = pd.read_excel(
-        io="erp/erp_3.1_20220713.xlsx",
-        sheet_name="ST",
-        header=2
-    )
-
-    extension_module_erp_three_20220713 = pd.read_excel(
-        io="erp/erp_3.1_20220713.xlsx",
-        sheet_name="EXT",
-        header=2
-    )
-
-    erp_three_module_dataframe_20220713 = setup_erp_three_module_dataframe(
-        start_module=start_module_erp_three_20220713,
-        extension_module=extension_module_erp_three_20220713
-    ).dropna()
-
-    # Preparing DB 20220713 input
-    sccconfig_dataframe_20220713 = pd.read_csv(filepath_or_buffer="db/sccconfig_20220713")
-    sccconfig_dataframe_20220713 = setup_sccconfig_dataframe(sccconfig=sccconfig_dataframe_20220713)
-
-    # Creating delta between ERP and DB 20220713
-    log_dataframe_20220713 = pd.concat(
-        [erp_three_module_dataframe_20220713[
-             erp_three_module_dataframe_20220713['Creation date'] > '2022-06-02'],
-         sccconfig_dataframe_20220713[
-             sccconfig_dataframe_20220713['Creation date'] > '2022-06-02']]
-    ).drop_duplicates(keep='first')
-    log_delta_dict_20220713 = generate_delta_dictionary(concatenated_dataframe=log_dataframe_20220713)
-    delta_table_20220713 = format_delta_table(log_dataframe_20220713, log_delta_dict_20220713)
-
-    # Parsing delta
-    log_dataframe_20220713_parsed = parse_delta_dict(
-        concatenated_dataframe=log_dataframe_20220713,
-        delta_dict_prev=log_delta_dict_20220713
-    )
-
-    log_delta_dict_20220713_parsed = generate_delta_dictionary(concatenated_dataframe=log_dataframe_20220713_parsed)
-    delta_table_20220713_parsed = format_delta_table(
-        dataframe=log_dataframe_20220713_parsed,
-        delta_code_dict=log_delta_dict_20220713_parsed
-    )
+    # # Creating delta between ERP and DB
+    # log_dataframe = pd.concat([
+    #     erp_module_dataframe,
+    #     sccconfig_dataframe
+    # ]).drop_duplicates(keep='first')
+    #
+    # # Generating delta codes and saving result
+    # log_delta_dict = generate_delta_dictionary(concatenated_dataframe=log_dataframe)
+    # delta_table = format_delta_table(log_dataframe, log_delta_dict)
+    # # with open('log/delta_entries_erp_and_sccconfig_delta_20220712.txt', 'w') as f:
+    # #     f.write(delta_table)
+    #
+    # # Preparing ERP 20220713 input
+    # start_module_erp_three_20220713 = pd.read_excel(
+    #     io="erp/erp_3.1_20220713.xlsx",
+    #     sheet_name="ST",
+    #     header=2
+    # )
+    #
+    # extension_module_erp_three_20220713 = pd.read_excel(
+    #     io="erp/erp_3.1_20220713.xlsx",
+    #     sheet_name="EXT",
+    #     header=2
+    # )
+    #
+    # erp_three_module_dataframe_20220713 = setup_erp_three_module_dataframe(
+    #     start_module=start_module_erp_three_20220713,
+    #     extension_module=extension_module_erp_three_20220713
+    # ).dropna()
+    #
+    # # Preparing DB 20220713 input
+    # sccconfig_dataframe_20220713 = pd.read_csv(filepath_or_buffer="db/sccconfig_20220713")
+    # sccconfig_dataframe_20220713 = setup_sccconfig_dataframe(sccconfig=sccconfig_dataframe_20220713)
+    #
+    # # Creating delta between ERP and DB 20220713
+    # log_dataframe_20220713 = pd.concat(
+    #     [erp_three_module_dataframe_20220713[
+    #          erp_three_module_dataframe_20220713['Creation date'] > '2022-06-02'],
+    #      sccconfig_dataframe_20220713[
+    #          sccconfig_dataframe_20220713['Creation date'] > '2022-06-02']]
+    # ).drop_duplicates(keep='first')
+    # log_delta_dict_20220713 = generate_delta_dictionary(concatenated_dataframe=log_dataframe_20220713)
+    # delta_table_20220713 = format_delta_table(log_dataframe_20220713, log_delta_dict_20220713)
+    #
+    # # Parsing delta
+    # log_dataframe_20220713_parsed = parse_delta_dict(
+    #     concatenated_dataframe=log_dataframe_20220713,
+    #     delta_dict_prev=log_delta_dict_20220713
+    # )
+    #
+    # log_delta_dict_20220713_parsed = generate_delta_dictionary(concatenated_dataframe=log_dataframe_20220713_parsed)
+    # delta_table_20220713_parsed = format_delta_table(
+    #     dataframe=log_dataframe_20220713_parsed,
+    #     delta_code_dict=log_delta_dict_20220713_parsed
+    # )
 
     # Preparing ERP 20220929 input
     start_module_erp_three_20220929 = pd.read_excel(
@@ -1078,13 +1109,45 @@ if __name__ == "__main__":
         extension_module=extension_module_erp_three_20220929
     ).dropna()
 
-    pd.set_option('display.max_rows', 10000)
-    print(erp_three_module_dataframe_20220929)
+    # Preparing DB 20220929 input
+    sccconfig_dataframe_20220929 = pd.read_csv(filepath_or_buffer="db/sccconfig_20220929.csv")
+    sccconfig_dataframe_20220929 = setup_sccconfig_dataframe(sccconfig=sccconfig_dataframe_20220929)
 
-    # Write results
-    # with open('log/delta_entries_erp_and_sccconfig_delta_20220602-20220713_parsed.txt', 'w+') as f:
-    #     f.write(delta_table_20220713_parsed)
+    # Creating delta between ERP and DB
+    pd.set_option('display.max_rows', 10000)
+    log_dataframe_20220929 = pd.concat(
+        [erp_three_module_dataframe_20220929,
+         sccconfig_dataframe_20220929],
+        ignore_index=True).drop_duplicates(keep='first')
+
+    log_delta_dict_20220929 = generate_delta_dictionary(
+        log_dataframe_20220929,
+        midpoint=erp_three_module_dataframe_20220929.shape[0]
+    )
+    delta_table_20220929 = format_delta_table(log_dataframe_20220929, log_delta_dict_20220929)
+
+    # potential_uuids_ = []
+    #
+    for key_ in log_delta_dict_20220929.keys():
+        print(key_)
+
+    # print(log_dataframe_20220929.loc[
+    #           log_dataframe_20220929['UUID'].isin(potential_uuids_)
+    #       ].sort_values(by='Creation date'))
+
+    # print(log_dataframe_20220929.loc[
+    #            log_dataframe_20220929['UUID'] == 'B7UQTJCFP03UW0PB'
+    #       ].sort_values(by='Creation date'))
+
+    # for unique_uuid_ in unique_uuids_:
+    #     if total_duplicates_[unique_uuid_] == 1:
+    #         print(unique_uuid_)
+
+    # # Write results
+    # with open('log/delta_entries_erp_and_sccconfig_20220929.txt', 'w+') as f:
+    #     f.write(delta_table_20220929)
     #
     # import json
-    # with open('delta_dict_20220602-20220713_parsed.json', 'w+') as f:
-    #     json.dump(log_delta_dict_20220713_parsed, f, indent=2)
+    #
+    # with open('json/delta_dict_erp_and_sccconfig_20220929.json', 'w+') as f:
+    #     json.dump(log_delta_dict_20220929, f, indent=2)
