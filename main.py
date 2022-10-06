@@ -1,5 +1,3 @@
-import json
-
 import numpy as np
 import pandas as pd
 from typing import Union
@@ -10,12 +8,14 @@ COLUMNS = [
 ]
 
 CODE_DESCR = {
-    'n': 'Missing ({column}) entries in both DataFrames',
-    'f': 'Not matching ({column}) entries between both DataFrames',
-    'a': 'Missing ({column}) entry in first DataFrame',
-    'b': 'Missing ({column}) entry in second DataFrame',
-    'c': 'Earliest ({column}) entry in fist DataFrame',
-    'd': 'Earliest ({column}) entry in second DataFrame'
+    'a': 'Missing ({column}) entry in ERP',
+    'b': 'Missing ({column}) entry in SCCConfig',
+    'c': 'Earliest ({column}) entry in ERP',
+    'd': 'Earliest ({column}) entry in SCCConfig',
+    'f': 'Not matching ({column}) entries between both ERP and SCCConfig',
+    'n': 'Missing ({column}) entries in both ERP and SCCConfig',
+    '1': '({column}) entry only found in ERP',
+    '2': '({column}) entry only found in SCCConfig'
 }
 
 pd.options.mode.chained_assignment = None
@@ -553,12 +553,15 @@ def generate_code(
 
         - Possible codes:
 
-            'n': 'Missing ({column}) entries in both DataFrames',
-            'f': 'Not matching ({column}) entries between both DataFrames',
-            'a': 'Missing ({column}) entry in first DataFrame',
-            'b': 'Missing ({column}) entry in second DataFrame',
-            'c': 'Earliest ({column}) entry in fist DataFrame',
-            'd': 'Earliest ({column}) entry in second DataFrame'
+            'a': 'Missing ({column}) entry in ERP',
+            'b': 'Missing ({column}) entry in SCCConfig',
+            'c': 'Earliest ({column}) entry in ERP',
+            'd': 'Earliest ({column}) entry in SCCConfig',
+            'f': 'Not matching ({column}) entries between both ERP and SCCConfig',
+            'n': 'Missing ({column}) entries in both ERP and SCCConfig',
+            '1': '({column}) entry only found in ERP',
+            '2': '({column}) entry only found in SCCConfig'
+
     Args:
         erp: (Dataframe) Entries from ERP
         sccconfig: (Dataframe) Entries from SCC config
@@ -673,7 +676,7 @@ def decode_code_key(delta_code: str) -> str:
     delta_code_parts = [f'UUID(s) flagged with delta code {delta_code} indicating:']
 
     if delta_code == '00000000':
-        delta_code_parts.append('\tEither the entries are unique or their entries from both DataFrames match')
+        delta_code_parts.append('\tEntries from both ERP and SCCConfig match')
 
     for code, column in zip(delta_code, COLUMNS):
         try:
@@ -1121,25 +1124,30 @@ if __name__ == "__main__":
         log_dataframe_20220929,
         midpoint=erp_three_module_dataframe_20220929.shape[0]
     )
+    delta_table_20220929 = format_delta_table(log_dataframe_20220929, log_delta_dict_20220929)
 
-    potential_uuids_ = []
-
+    # potential_uuids_ = []
+    #
     for key_ in log_delta_dict_20220929.keys():
-        if '1' in key_:
-            potential_uuids_ += log_delta_dict_20220929[key_]
+        print(key_)
 
     # print(log_dataframe_20220929.loc[
     #           log_dataframe_20220929['UUID'].isin(potential_uuids_)
+    #       ].sort_values(by='Creation date'))
+
+    # print(log_dataframe_20220929.loc[
+    #            log_dataframe_20220929['UUID'] == 'B7UQTJCFP03UW0PB'
     #       ].sort_values(by='Creation date'))
 
     # for unique_uuid_ in unique_uuids_:
     #     if total_duplicates_[unique_uuid_] == 1:
     #         print(unique_uuid_)
 
-    # Write results
-    # with open('log/delta_entries_erp_and_sccconfig_delta_20220602-20220713_parsed.txt', 'w+') as f:
-    #     f.write(delta_table_20220713_parsed)
+    # # Write results
+    # with open('log/delta_entries_erp_and_sccconfig_20220929.txt', 'w+') as f:
+    #     f.write(delta_table_20220929)
     #
     # import json
-    # with open('delta_dict_20220602-20220713_parsed.json', 'w+') as f:
-    #     json.dump(log_delta_dict_20220713_parsed, f, indent=2)
+    #
+    # with open('json/delta_dict_erp_and_sccconfig_20220929.json', 'w+') as f:
+    #     json.dump(log_delta_dict_20220929, f, indent=2)
