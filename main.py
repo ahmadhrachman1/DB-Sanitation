@@ -895,6 +895,64 @@ def format_delta_table(
     return "\n".join(formatted_string_parts)
 
 
+def format_delta_table_excel(
+        concatenated_dataframe: pd.DataFrame,
+        delta_code_dict: dict,
+        file_path: str
+):
+    for delta_code, uuids in delta_code_dict.items():
+        curr_dataframe = pd.DataFrame()
+        try:
+            for uuid in uuids:
+                to_append = concatenated_dataframe[concatenated_dataframe['UUID'] == uuid]
+                curr_dataframe = pd.concat(
+                    [curr_dataframe,
+                     to_append],
+                    ignore_index=True)
+
+            with pd.ExcelWriter(
+                    file_path,
+                    mode='a',
+                    if_sheet_exists='replace'
+            ) as writer:
+
+                curr_dataframe.style.set_properties(**{'text-align': 'center'}).to_excel(
+                    writer,
+                    sheet_name=delta_code,
+                    index=False
+                )
+
+                ws = writer.sheets[delta_code]
+                dims = {}
+                for row in ws.rows:
+                    for cell in row:
+                        if cell.value:
+                            dims[cell.column_letter] = max((dims.get(cell.column_letter, 0), len(str(cell.value))))
+                for col, value in dims.items():
+                    ws.column_dimensions[col].width = value + 10
+
+        except FileNotFoundError:
+            with pd.ExcelWriter(
+                    file_path,
+                    mode='w'
+            ) as writer:
+
+                curr_dataframe.style.set_properties(**{'text-align': 'center'}).to_excel(
+                    writer,
+                    sheet_name=delta_code,
+                    index=False
+                )
+
+                ws = writer.sheets[delta_code]
+                dims = {}
+                for row in ws.rows:
+                    for cell in row:
+                        if cell.value:
+                            dims[cell.column_letter] = max((dims.get(cell.column_letter, 0), len(str(cell.value))))
+                for col, value in dims.items():
+                    ws.column_dimensions[col].width = value + 10
+
+
 def setup_filtered_list(concatenated_dataframe: pd.DataFrame, delta_dict: dict,
                         take_first_value: bool = False) -> pd.DataFrame:
     result = 0
@@ -994,7 +1052,7 @@ if __name__ == "__main__":
         start_module=start_module_erp_two,
         extension_module=extension_module_erp_two
     )
-    #
+
     # # ERP V3
     # start_module_erp_three = pd.read_excel(
     #     io="erp/erp_3.1.xlsx",
@@ -1031,9 +1089,10 @@ if __name__ == "__main__":
     #     delta_dict_
     # )
     #
-    # Preparing DB input
-    sccconfig_dataframe = pd.read_csv(filepath_or_buffer="db/sccconfig")
-    sccconfig_dataframe = setup_sccconfig_dataframe(sccconfig=sccconfig_dataframe)
+    # # Preparing DB input
+    # sccconfig_dataframe = pd.read_csv(filepath_or_buffer="db/sccconfig")
+    # sccconfig_dataframe = setup_sccconfig_dataframe(sccconfig=sccconfig_dataframe)
+    # print(sccconfig_dataframe[sccconfig_dataframe['UUID'] == '4NBVR8EPJ5TQ4H85'])
 
     # # Creating delta between ERP and DB
     # log_dataframe = pd.concat([
@@ -1107,7 +1166,23 @@ if __name__ == "__main__":
     erp_three_module_dataframe_20220929 = setup_erp_three_module_dataframe(
         start_module=start_module_erp_three_20220929,
         extension_module=extension_module_erp_three_20220929
-    ).dropna()
+    )
+
+    # Joining ERP V2 & V3
+    erp_concatenated_dataframe = pd.concat([
+        erp_two_module_dataframe,
+        erp_three_module_dataframe_20220929
+    ]).drop_duplicates(keep='first')
+
+    delta_dict_erp_20220929 = generate_delta_dictionary(
+        concatenated_dataframe=erp_concatenated_dataframe,
+        midpoint=erp_two_module_dataframe.shape[0]
+    )
+
+    erp_module_dataframe_20220929 = setup_filtered_list(
+        erp_concatenated_dataframe,
+        delta_dict_erp_20220929
+    )
 
     # Preparing DB 20220929 input
     sccconfig_dataframe_20220929 = pd.read_csv(filepath_or_buffer="db/sccconfig_20220929.csv")
@@ -1116,7 +1191,7 @@ if __name__ == "__main__":
     # Creating delta between ERP and DB
     pd.set_option('display.max_rows', 10000)
     log_dataframe_20220929 = pd.concat(
-        [erp_three_module_dataframe_20220929,
+        [erp_module_dataframe_20220929,
          sccconfig_dataframe_20220929],
         ignore_index=True).drop_duplicates(keep='first')
 
@@ -1128,8 +1203,14 @@ if __name__ == "__main__":
 
     # potential_uuids_ = []
     #
-    for key_ in log_delta_dict_20220929.keys():
-        print(key_)
+    # for key_ in log_delta_dict_20220929.keys():
+    #     print(key_)
+
+    format_delta_table_excel(
+        concatenated_dataframe=log_dataframe_20220929,
+        delta_code_dict=log_delta_dict_20220929,
+        file_path='test/delta_table_erp_sccconfig_20220929.xlsx'
+    )
 
     # print(log_dataframe_20220929.loc[
     #           log_dataframe_20220929['UUID'].isin(potential_uuids_)
@@ -1143,11 +1224,11 @@ if __name__ == "__main__":
     #     if total_duplicates_[unique_uuid_] == 1:
     #         print(unique_uuid_)
 
-    # # Write results
-    # with open('log/delta_entries_erp_and_sccconfig_20220929.txt', 'w+') as f:
-    #     f.write(delta_table_20220929)
-    #
-    # import json
-    #
-    # with open('json/delta_dict_erp_and_sccconfig_20220929.json', 'w+') as f:
-    #     json.dump(log_delta_dict_20220929, f, indent=2)
+    # Write results
+    with open('log/delta_entries_erp_and_sccconfig_20220929.txt', 'w+') as f:
+        f.write(delta_table_20220929)
+
+    import json
+
+    with open('json/delta_dict_erp_and_sccconfig_20220929.json', 'w+') as f:
+        json.dump(log_delta_dict_20220929, f, indent=2)
