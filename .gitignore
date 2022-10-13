@@ -2,5 +2,9 @@ db/
 erp/
 venv/
 .idea/
-/log/
+log/
+test/
 *.json
+main - 19.09.2022.py
+missing_uuids.py
+test.py
