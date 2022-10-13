@@ -913,7 +913,8 @@ def format_delta_table_excel(
             with pd.ExcelWriter(
                     file_path,
                     mode='a',
-                    if_sheet_exists='replace'
+                    if_sheet_exists='replace',
+                    engine='openpyxl'
             ) as writer:
 
                 curr_dataframe.style.set_properties(**{'text-align': 'center'}).to_excel(
@@ -934,7 +935,8 @@ def format_delta_table_excel(
         except FileNotFoundError:
             with pd.ExcelWriter(
                     file_path,
-                    mode='w'
+                    mode='w',
+                    engine='openpyxl'
             ) as writer:
 
                 curr_dataframe.style.set_properties(**{'text-align': 'center'}).to_excel(
@@ -1224,11 +1226,11 @@ if __name__ == "__main__":
     #     if total_duplicates_[unique_uuid_] == 1:
     #         print(unique_uuid_)
 
-    # Write results
-    with open('log/delta_entries_erp_and_sccconfig_20220929.txt', 'w+') as f:
-        f.write(delta_table_20220929)
-
-    import json
-
-    with open('json/delta_dict_erp_and_sccconfig_20220929.json', 'w+') as f:
-        json.dump(log_delta_dict_20220929, f, indent=2)
+    # # Write results
+    # with open('log/delta_entries_erp_and_sccconfig_20220929.txt', 'w+') as f:
+    #     f.write(delta_table_20220929)
+    #
+    # import json
+    #
+    # with open('json/delta_dict_erp_and_sccconfig_20220929.json', 'w+') as f:
+    #     json.dump(log_delta_dict_20220929, f, indent=2)
