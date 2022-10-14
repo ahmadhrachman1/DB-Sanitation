@@ -593,10 +593,9 @@ def generate_code(
     if column == 'Creation date':
         if ignore_date:
             return '-'
-        entry_with_earliest_date = erp_value < sccconfig_value
-        if entry_with_earliest_date:
+        if erp_value < sccconfig_value:
             return 'c'
-        else:
+        elif erp_value > sccconfig_value:
             return 'd'
 
     if erp_value == sccconfig_value:
