@@ -529,8 +529,7 @@ def generate_code(
         erp: Union[pd.DataFrame, None],
         sccconfig: Union[pd.DataFrame, None],
         column: str,
-        midpoint: int,
-        is_duplicate: bool = False
+        ignore_date: bool = False
 ) -> str:
     """
     Generates the delta code by taking each property for each dataframe and compares
@@ -566,13 +565,15 @@ def generate_code(
         erp: (Dataframe) Entries from ERP
         sccconfig: (Dataframe) Entries from SCC config
         column: (String) Column name
-        midpoint: (Integer) Index where ERP and SCC are joined
-        is_duplicate: (Boolean) Indicates if erp == sccconfig. It
-                                assumes that erp and sccconfig are not
-                                the same
+        ignore_date: (Boolean) Default False. Compares
+                     creation date if True
     Returns:
         delta_code: (String) one possible code
     """
+    if sccconfig is None:
+        return '1'
+    if erp is None:
+        return '2'
 
     erp_value = erp[column]
     sccconfig_value = sccconfig[column]
@@ -583,36 +584,32 @@ def generate_code(
     if entry_one_null and entry_two_null:
         return 'n'
 
-    if is_duplicate:
-        if erp.name < midpoint:
-            return '1'
-        elif sccconfig.name >= midpoint:
-            return '2'
-
     if entry_one_null:
         return 'a'
     if entry_two_null:
         return 'b'
-    if erp_value == sccconfig_value:
-        return '0'
-
-    delta_code = 'f'
-    # If both entries exist and are not the same, there is a discrepancy
 
     # Potentially specify discrepancy further
     if column == 'Creation date':
+        if ignore_date:
+            return '-'
         entry_with_earliest_date = erp_value < sccconfig_value
         if entry_with_earliest_date:
-            delta_code = 'c'
+            return 'c'
         else:
-            delta_code = 'd'
+            return 'd'
 
-    return delta_code
+    if erp_value == sccconfig_value:
+        return '0'
+
+    # If both entries exist and are not the same, there is a discrepancy
+    return 'f'
 
 
 def generate_delta_dictionary(
         concatenated_dataframe: pd.DataFrame,
-        midpoint: int
+        midpoint: int,
+        ignore_date: bool = False
 ) -> dict:
     """
     Generates a dictionary containing delta codes, a code system for indicating
@@ -623,6 +620,8 @@ def generate_delta_dictionary(
     Args:
         concatenated_dataframe: (Dataframe) ERP and SCC config grouped
         midpoint: (Integer) Index where ERP and SCC are joined
+        ignore_date: (Boolean) Default False. Compares
+                     creation date if True
     Returns:
         delta_codes_dict: (Dictionary) Collection of delta codes, along with
                           the corresponding UUIDs
@@ -630,28 +629,32 @@ def generate_delta_dictionary(
             - Value: UUIDs
     """
     unique_uuids = concatenated_dataframe['UUID'].unique()
-    total_duplicates = concatenated_dataframe['UUID'].value_counts()
+    total_entries = concatenated_dataframe['UUID'].value_counts()
     delta_codes_dict = {}
 
     for uuid in unique_uuids:
         delta_code = ""
 
         entry_uuid = concatenated_dataframe[concatenated_dataframe['UUID'] == uuid]
-        entry_erp = entry_uuid.iloc[0]
-        entry_sccconfig = entry_erp
-        is_duplicate = True
+        entry_erp = None
+        entry_sccconfig = None
 
-        if total_duplicates[uuid] > 1:
+        if total_entries[uuid] == 1:
+            if entry_uuid.index[0] < midpoint:
+                entry_erp = entry_uuid
+            if entry_uuid.index[0] >= midpoint:
+                entry_sccconfig = entry_uuid
+
+        elif total_entries[uuid] == 2:
+            entry_erp = entry_uuid.iloc[0]
             entry_sccconfig = entry_uuid.iloc[1]
-            is_duplicate = False
 
         for column in COLUMNS:
             delta_code += generate_code(
                 entry_erp,
                 entry_sccconfig,
                 column,
-                midpoint,
-                is_duplicate
+                ignore_date
             )
 
         dict_keys = delta_codes_dict.keys()
